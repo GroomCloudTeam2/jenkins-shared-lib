@@ -7,6 +7,7 @@ def call() {
     } else if (env.GIT_PREVIOUS_SUCCESSFUL_COMMIT) {
         base = env.GIT_PREVIOUS_SUCCESSFUL_COMMIT
     } else {
+        echo "⚠️ No base commit found. Building all services."
         return allServices
     }
 
@@ -15,15 +16,21 @@ def call() {
             returnStdout: true
     ).trim()
 
-    if (!diff) return []
+    if (!diff) {
+        echo "🟢 No changed files detected."
+        return []
+    }
 
-    if (diff.contains('service/common/')) {
+    def files = diff.readLines()
+
+    if (files.any { it.startsWith('service/common/') }) {
+        echo "🧩 common module changed → build all services"
         return allServices
     }
 
     def changed = []
     allServices.each { svc ->
-        if (diff.contains("service/${svc}/")) {
+        if (files.any { it.startsWith("service/${svc}/") }) {
             changed << svc
         }
     }
