@@ -1,6 +1,6 @@
 def call(String serviceName) {
 
-    def imageUri = "${env.ECR_REGISTRY}/msa-${serviceName}:${env.IMAGE_TAG}"
+    def imageUri = "${env.ECR_REGISTRY}/goorm-${serviceName}:${env.IMAGE_TAG}"
     def workDir  = "deploy/${serviceName}"
     def zipName  = "${serviceName}-${env.BUILD_NUMBER}.zip"
 
