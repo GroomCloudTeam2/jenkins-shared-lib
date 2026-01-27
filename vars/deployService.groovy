@@ -76,10 +76,10 @@ EOF
       # =========================
       # 6️⃣ CodeDeploy 배포 생성
       # =========================
-    #  aws deploy create-deployment \\
-    #    --application-name ${env.CODEDEPLOY_APP} \\
-    #    --deployment-group-name ${env.CODEDEPLOY_GROUP_PREFIX}-${serviceName} \\
-    #    --s3-location bucket=${env.S3_BUCKET},key=${serviceName}/${zipName},bundleType=zip \\
-    #    --region ${env.AWS_REGION}
-    # """
+     aws deploy create-deployment \\
+       --application-name ${env.CODEDEPLOY_APP} \\
+       --deployment-group-name ${env.CODEDEPLOY_GROUP_PREFIX}-${serviceName} \\
+       --s3-location bucket=${env.S3_BUCKET},key=${serviceName}/${zipName},bundleType=zip \\
+       --region ${env.AWS_REGION}
+    """
 }
