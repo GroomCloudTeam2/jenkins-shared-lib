@@ -41,7 +41,7 @@ EOF
 
       aws ecs update-service \\
         --cluster ${env.ECS_CLUSTER} \\
-        --service msa-${serviceName} \\
+        --service msa-${serviceName}-service \\
         --task-definition \$TASK_DEF_ARN \\
         --region ${env.AWS_REGION}
     """
