@@ -80,12 +80,12 @@ private String getLastErrorHintSafe() {
         if (!logLines) return ""
 
         def patterns = [
-                ~/^.*ERROR.*$/i,
-                        ~/^.*Exception.*$/i,
-                ~/^.*FAILED.*$/i,
-                        ~/^.*fatal:.*$/i,
-                ~/^.*denied.*$/i,
-                        ~/^.*permission.*$/i
+                ~/(?i).*ERROR.*/,
+                ~/(?i).*Exception.*/,
+                ~/(?i).*FAILED.*/,
+                ~/(?i).*fatal:.*/,
+                ~/(?i).*denied.*/,
+                ~/(?i).*permission.*/
         ]
 
         for (int i = logLines.size() - 1; i >= 0; i--) {
