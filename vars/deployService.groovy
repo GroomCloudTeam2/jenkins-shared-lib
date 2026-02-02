@@ -12,7 +12,7 @@ def call(Map config = [:]) {
     // 템플릿 로드 및 치환
     def template = libraryResource('templates/taskdef.json')
     def taskDef = template
-            .replace('{{SERVICE_NAME}}', serviceName)
+            .replace('courm-{{SERVICE_NAME}}-service-prod', serviceName)
             .replace('{{IMAGE_URI}}', imageUri)
             .replace('{{CPU}}', cpu)
             .replace('{{MEMORY}}', memory)
