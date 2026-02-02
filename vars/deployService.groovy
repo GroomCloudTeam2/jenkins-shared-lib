@@ -33,7 +33,7 @@ def call(Map config = [:]) {
         
         aws ecs update-service \\
             --cluster ${env.ECS_CLUSTER} \\
-            --service msa-${serviceName}-service \\
+            --service courm-${serviceName}-service-prod \\
             --task-definition \$TASK_DEF_ARN \\
             --region ${env.AWS_REGION}
     """
