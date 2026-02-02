@@ -1,5 +1,5 @@
 {
-  "family": "msa-{{SERVICE_NAME}}",
+  "family": "courm-{{SERVICE_NAME}}-service-prod",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "{{CPU}}",
