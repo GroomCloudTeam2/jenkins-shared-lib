@@ -18,9 +18,6 @@ def call(String service, String imageTag) {
     sh """
         set -e
 
-        aws ecr get-login-password --region ${env.AWS_REGION} \\
-  |     docker login --username AWS --password-stdin ${env.ECR_REGISTRY}
-
         # buildx 사용 보장
         docker buildx inspect multiarch-builder >/dev/null 2>&1 || \
         docker buildx create --name multiarch-builder --use
