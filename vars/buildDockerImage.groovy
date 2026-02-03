@@ -13,20 +13,24 @@
 //}
 def call(String service, String imageTag) {
     def contextPath = "service/${service}"
-    def imageName = "${env.ECR_REGISTRY}/goorm-${service}"
+    def imageName   = "${env.ECR_REGISTRY}/goorm-${service}"
+    def builderName = "builder-${service}"
 
     sh """
         set -e
+        export DOCKER_BUILDKIT=1
 
-        # buildx 사용 보장
-        docker buildx inspect multiarch-builder >/dev/null 2>&1 || \
-        docker buildx create --name multiarch-builder --use
+        # 서비스별 buildx builder 보장 (parallel 안전)
+        docker buildx inspect ${builderName} >/dev/null 2>&1 || \
+        docker buildx create --name ${builderName} --use
 
-        docker buildx use multiarch-builder
+        docker buildx use ${builderName}
 
-        # 멀티 아키텍처 빌드 & ECR push
+        # 멀티 아키텍처 빌드 + ECR push + cache
         docker buildx build \
             --platform linux/amd64,linux/arm64 \
+            --cache-from type=registry,ref=${imageName}:cache \
+            --cache-to type=registry,ref=${imageName}:cache,mode=max \
             -t ${imageName}:${imageTag} \
             -t ${imageName}:latest \
             --push \
