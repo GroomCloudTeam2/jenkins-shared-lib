@@ -27,7 +27,7 @@ def call(Map args = [:]) {
             sh """
                 set -e
                 cd ${workDir}
-                sed -i 's|tag:.*|tag: "${imageTag}"|' ${valuesBaseDir}/${svc}-service/values.yaml
+                sed -i 's|tag:.*|tag: "${imageTag}"|' ${valuesBaseDir}/${svc}-service/values-dev.yaml
             """
         }
 
