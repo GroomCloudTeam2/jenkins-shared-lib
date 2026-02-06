@@ -8,9 +8,9 @@ def call(Map args = [:]) {
         return
     }
 
-    def testTasks = services.collect { svc ->
-        ":service:${svc}:test :service:${svc}:jacocoTestReport"
-    }.join(' ')
+//    def testTasks = services.collect { svc ->
+//        ":service:${svc}:test :service:${svc}:jacocoTestReport"
+//    }.join(' ')
 
     def excludeOpt = excludeTags ? "-DexcludeTags=${excludeTags}" : ""
 
