@@ -13,7 +13,7 @@ def call(Map args = [:]) {
     }
 
     withCredentials([
-            string(credentialsId: 'github-token', variable: 'GIT_TOKEN')
+            string(credentialsId: 'git-token', variable: 'GIT_TOKEN')
     ]) {
         sh """
             set -e
