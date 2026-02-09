@@ -10,14 +10,26 @@ def call(Map args = [:]) {
 
     parallel services.collectEntries { svc ->
         [(svc): {
-            // ECR 레포지토리 이름 규칙
             def image = "${ecrRegistry}/courm-${svc}:${imageTag}"
-            echo "Jib build & push using IRSA (native AWS auth) -> ${image}"
+            echo "Jib build & push using IRSA -> ${image}"
+
+            // ✅ 환경변수 확인 (디버깅)
+            sh '''
+                echo "AWS_ROLE_ARN: $AWS_ROLE_ARN"
+                echo "AWS_WEB_IDENTITY_TOKEN_FILE: $AWS_WEB_IDENTITY_TOKEN_FILE"
+            '''
 
             sh """
               set -e
+              # ✅ Jib가 AWS SDK를 사용하도록 설정
+              export AWS_SDK_LOAD_CONFIG=true
+              
               ./gradlew :service:${svc}:jib --no-daemon \\
-                -Djib.to.image=${image}
+                -Djib.to.image=${image} \\
+                -Djib.to.credHelper= \\
+                -Djib.allowInsecureRegistries=false \\
+                -Djib.console=plain \\
+                --info
             """
         }]
     }
