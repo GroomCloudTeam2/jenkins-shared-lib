@@ -11,7 +11,7 @@ def call(Map args = [:]) {
 
     // 각 서비스별로 순차 처리
     services.each { svc ->
-        def image = "${ecrRegistry}/courm-${svc}:${imageTag}"
+        def image = "${ecrRegistry}/goorm-${svc}:${imageTag}"
 
         echo "════════════════════════════════════════"
         echo "🚀 Service: ${svc}"
