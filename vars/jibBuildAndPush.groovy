@@ -12,6 +12,8 @@ def call(Map args = [:]) {
     // 각 서비스별로 순차 처리
     services.each { svc ->
         def image = "${ecrRegistry}/goorm-${svc}:${imageTag}"
+        def gradleHome = "/home/jenkins/.gradle/${svc}"
+
 
         echo "════════════════════════════════════════"
         echo "🚀 Service: ${svc}"
@@ -45,7 +47,9 @@ def call(Map args = [:]) {
 
         // ✅ 2단계: Gradle 컨테이너에서 Jib 빌드 & 푸시
         container('gradle') {
+            withEnv(["GRADLE_USER_HOME=${gradleHome}"])
             echo "🔨 Building and pushing Docker image with Jib..."
+            echo "GRADLE_USER_HOME=$GRADLE_USER_HOME"
 
             sh """
               ./gradlew :service:${svc}:jib \\
