@@ -47,7 +47,7 @@ def call(Map args = [:]) {
 
         // ✅ 2단계: Gradle 컨테이너에서 Jib 빌드 & 푸시
         container('gradle') {
-            withEnv(["GRADLE_USER_HOME=${gradleHome}"])
+            withEnv(["GRADLE_USER_HOME=/home/jenkins/.gradle/${svc}"])
             echo "🔨 Building and pushing Docker image with Jib..."
             echo "GRADLE_USER_HOME=$GRADLE_USER_HOME"
 
