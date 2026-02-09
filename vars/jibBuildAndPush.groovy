@@ -9,45 +9,58 @@ def call(Map args = [:]) {
         return
     }
 
-    parallel services.collectEntries { svc ->
-        [(svc): {
-            def image = "${ecrRegistry}/courm-${svc}:${imageTag}"
+    // 각 서비스별로 순차 처리
+    services.each { svc ->
+        def image = "${ecrRegistry}/courm-${svc}:${imageTag}"
 
-            echo "════════════════════════════════════════"
-            echo "🚀 Building: ${svc}"
-            echo "📦 Target: ${image}"
-            echo "🔐 Auth: IRSA (AWS SDK)"
-            echo "════════════════════════════════════════"
+        echo "════════════════════════════════════════"
+        echo "🚀 Service: ${svc}"
+        echo "📦 Image: ${image}"
+        echo "🔐 Auth: IRSA + ECR Token"
+        echo "════════════════════════════════════════"
 
-            // ✅ IRSA 환경변수 확인
+        // ✅ 1단계: AWS CLI 컨테이너에서 ECR 로그인 토큰 가져오기
+        def ecrPassword = ''
+        container('aws-cli') {
+            echo "🔑 Retrieving ECR login token..."
+
+            // IRSA 환경변수 확인
             sh '''
-                echo "Checking IRSA configuration..."
-                echo "AWS_ROLE_ARN=${AWS_ROLE_ARN:-NOT_SET}"
-                echo "AWS_WEB_IDENTITY_TOKEN_FILE=${AWS_WEB_IDENTITY_TOKEN_FILE:-NOT_SET}"
-                echo "AWS_REGION=${AWS_REGION:-NOT_SET}"
-                
-                if [ -z "$AWS_ROLE_ARN" ]; then
-                    echo "❌ ERROR: AWS_ROLE_ARN is not set!"
-                    echo "Please check ServiceAccount IRSA annotation"
-                    exit 1
-                fi
+                echo "Checking IRSA configuration:"
+                echo "  AWS_ROLE_ARN=${AWS_ROLE_ARN:-NOT_SET}"
+                echo "  AWS_WEB_IDENTITY_TOKEN_FILE=${AWS_WEB_IDENTITY_TOKEN_FILE:-NOT_SET}"
             '''
 
-            // ✅ AWS CLI 없이 Jib가 AWS SDK로 직접 인증
+            // AWS CLI 버전 확인
+            sh 'aws --version'
+
+            // ECR 토큰 가져오기
+            ecrPassword = sh(
+                    script: "aws ecr get-login-password --region ${awsRegion}",
+                    returnStdout: true
+            ).trim()
+
+            echo "✅ ECR token retrieved successfully (${ecrPassword.length()} characters)"
+        }
+
+        // ✅ 2단계: Gradle 컨테이너에서 Jib 빌드 & 푸시
+        container('gradle') {
+            echo "🔨 Building and pushing Docker image with Jib..."
+
             sh """
-              # AWS SDK 설정
-              export AWS_SDK_LOAD_CONFIG=true
-              export AWS_REGION=${awsRegion}
-              
-              # Jib 빌드 (AWS SDK가 자동으로 IRSA 사용)
               ./gradlew :service:${svc}:jib \\
                 --no-daemon \\
                 -Djib.to.image=${image} \\
+                -Djib.to.auth.username=AWS \\
+                -Djib.to.auth.password='${ecrPassword}' \\
+                -Djib.from.auth.username='' \\
+                -Djib.from.auth.password='' \\
                 -Djib.console=plain \\
                 --info
             """
 
             echo "✅ Successfully pushed: ${image}"
-        }]
+            echo "════════════════════════════════════════"
+        }
     }
 }
