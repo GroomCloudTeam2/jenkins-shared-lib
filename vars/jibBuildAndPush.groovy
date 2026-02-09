@@ -47,24 +47,21 @@ def call(Map args = [:]) {
 
         // ✅ 2단계: Gradle 컨테이너에서 Jib 빌드 & 푸시
         container('gradle') {
-            withEnv(["GRADLE_USER_HOME=/home/jenkins/.gradle/${svc}"])
-            echo "🔨 Building and pushing Docker image with Jib..."
-            echo "GRADLE_USER_HOME=$GRADLE_USER_HOME"
+            withEnv(["GRADLE_USER_HOME=${gradleHome}"]) {
+                echo "🔨 Building and pushing Docker image with Jib..."
+                echo "GRADLE_USER_HOME=$GRADLE_USER_HOME"
 
-            sh """
-              ./gradlew :service:${svc}:jib \\
-                --no-daemon \\
-                -Djib.to.image=${image} \\
-                -Djib.to.auth.username=AWS \\
-                -Djib.to.auth.password='${ecrPassword}' \\
-                -Djib.from.auth.username='' \\
-                -Djib.from.auth.password='' \\
-                -Djib.console=plain \\
-                --info
-            """
-
-            echo "✅ Successfully pushed: ${image}"
-            echo "════════════════════════════════════════"
+                sh """
+          ./gradlew :service:${svc}:jib \
+            --no-daemon \
+            -Dorg.gradle.vfs.watch=false \
+            -Djib.to.image=${image} \
+            -Djib.to.auth.username=AWS \
+            -Djib.to.auth.password='${ecrPassword}' \
+            -Djib.console=plain
+        """
+            }
         }
+
     }
 }
