@@ -12,7 +12,7 @@ def call(Map args = [:]) {
     // 각 서비스별로 순차 처리
     services.each { svc ->
         def image = "${ecrRegistry}/goorm-${svc}:${imageTag}"
-        def gradleHome = "/home/jenkins/.gradle/${svc}"
+        def gradleHome = "/home/jenkins/.gradle"
 
 
         echo "════════════════════════════════════════"
