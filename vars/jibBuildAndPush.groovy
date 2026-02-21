@@ -2,66 +2,29 @@ def call(Map args = [:]) {
     def services    = args.services ?: error("services is required")
     def imageTag    = args.imageTag ?: error("imageTag is required")
     def ecrRegistry = args.ecrRegistry ?: error("ecrRegistry is required")
-    def awsRegion   = args.awsRegion ?: 'ap-northeast-2'
+    def ecrPassword = args.ecrPassword ?: error("ecrPassword is required")
 
     if (!services || services.isEmpty()) {
         echo "No services to build & push"
         return
     }
 
-    // 각 서비스별로 순차 처리
     services.each { svc ->
         def image = "${ecrRegistry}/goorm-${svc}:${imageTag}"
-        def gradleHome = "/home/jenkins/.gradle"
 
+        echo "Service: ${svc}"
+        echo "Image: ${image}"
 
-        echo "════════════════════════════════════════"
-        echo "🚀 Service: ${svc}"
-        echo "📦 Image: ${image}"
-        echo "🔐 Auth: IRSA + ECR Token"
-        echo "════════════════════════════════════════"
-
-        // ✅ 1단계: AWS CLI 컨테이너에서 ECR 로그인 토큰 가져오기
-        def ecrPassword = ''
-        container('aws-cli') {
-            echo "🔑 Retrieving ECR login token..."
-
-            // IRSA 환경변수 확인
-            sh '''
-                echo "Checking IRSA configuration:"
-                echo "  AWS_ROLE_ARN=${AWS_ROLE_ARN:-NOT_SET}"
-                echo "  AWS_WEB_IDENTITY_TOKEN_FILE=${AWS_WEB_IDENTITY_TOKEN_FILE:-NOT_SET}"
-            '''
-
-            // AWS CLI 버전 확인
-            sh 'aws --version'
-
-            // ECR 토큰 가져오기
-            ecrPassword = sh(
-                    script: "aws ecr get-login-password --region ${awsRegion}",
-                    returnStdout: true
-            ).trim()
-
-            echo "✅ ECR token retrieved successfully (${ecrPassword.length()} characters)"
+        withEnv(["JIB_ECR_PASSWORD=${ecrPassword}"]) {
+            sh """
+                ./gradlew :service:${svc}:jib \
+                  --no-daemon \
+                  -Dorg.gradle.vfs.watch=false \
+                  -Djib.to.image=${image} \
+                  -Djib.to.auth.username=AWS \
+                  -Djib.to.auth.password="\$JIB_ECR_PASSWORD" \
+                  -Djib.console=plain
+              """
         }
-
-        // ✅ 2단계: Gradle 컨테이너에서 Jib 빌드 & 푸시
-        container('gradle') {
-            withEnv(["GRADLE_USER_HOME=${gradleHome}"]) {
-                echo "🔨 Building and pushing Docker image with Jib..."
-                echo "GRADLE_USER_HOME=$GRADLE_USER_HOME"
-
-                sh """
-          ./gradlew :service:${svc}:jib \
-            --no-daemon \
-            -Dorg.gradle.vfs.watch=false \
-            -Djib.to.image=${image} \
-            -Djib.to.auth.username=AWS \
-            -Djib.to.auth.password='${ecrPassword}' \
-            -Djib.console=plain
-        """
-            }
-        }
-
     }
 }
