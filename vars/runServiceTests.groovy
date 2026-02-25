@@ -8,15 +8,14 @@ def call(Map args = [:]) {
         return
     }
 
-    // [수정] Jacoco 리포트 생성은 주석 처리하여 속도를 높입니다.
     def testTasks = services.collect { svc ->
         ":service:${svc}:test"
-        // ":service:${svc}:jacocoTestReport" // 일단 제거
+        // ":service:${svc}:jacocoTestReport"
     }.join(' ')
 
     def excludeOpt = excludeTags ? "-PexcludeTags=${excludeTags}" : ""
 
-    echo "🚀 Running only tests (Jacoco skipped): ${testTasks}"
+    echo "🚀 Running tests: ${testTasks}"
 
     sh """
         set -e
